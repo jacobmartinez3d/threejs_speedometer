@@ -25,11 +25,13 @@ class speedometer extends GaugeGroup {
 
 		// shells are the circular GagueGroups radiating from center
 		this.shells = [
+			//shell 0: Speed Indicator
 			Gauge("speed_indicator",
 				type="lifebar",
 				style="gradient_wing",
 				color="ice",
 				shape="circular"),
+			//shell 1: Power, Fuel Indicators
 			GaugeGroup("resouces_lifebars",
 				Gauge("power_gauge",
 					type="lifebar",
@@ -47,24 +49,7 @@ class speedometer extends GaugeGroup {
 
 	}
 
-	create() {
-		// mph number indicator
-		this.mph_number_indicator[0].translate.x(0)  // set to number
-		this.mph_number_indicator[0].translate.y(0)  // set to number
-		this.mph_number_indicator[0].translate.z(0)  // set to number
 
-		// mph text-label indicator
-		this.mph_text_indicator[0].translate.x(0)  // set to text
-		this.mph_text_indicator[0].translate.y(
-			this.mph_number_indicator[0].par.y/2)  // set to text
-		this.mph_text_indicator[0].translate.z(0)  // set to text
-
-		this.mpg
-	}
-
-	update() {
-		// Set new properties and update UI elements to reflect.
-	}
 	add_mph_indicator(threejs_font) {
 		this.add_mph_indicator.push(threejs_font)
 	}
