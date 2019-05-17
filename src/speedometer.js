@@ -17,39 +17,59 @@ class speedometer extends GaugeGroup {
 
 		// use secondary font here
 		this.mpg_indicator = [
-			new GaugeGroup("main_mpg",
-				// icon attached to the "mpg" number
-				Gauge("main_mph_num", this.fonts[1], icon = new Icon("*path/to/icon1.png*")),
-				Gauge("main_mph_txt", this.fonts[1])
+			new GaugeGroup(
+				"main_mpg",
+				Gauge(
+					"main_mph_num",
+					// icon attached to the "mpg" number
+					icon = new Icon("*path/to/icon1.png*")),
+				Gauge(
+					"main_mph_txt")
 			)]
 
 		// shells are the circular GagueGroups radiating from center
-		this.shells = [
+		this.shells = []
+		this.add_shell(
 			//shell 0: Speed Indicator
-			Gauge("speed_indicator",
+			Gauge(
+				"speed_indicator",
 				type="lifebar",
 				style="gradient_wing",
 				color="ice",
-				shape="circular"),
+				shape="circular",
+				shell=shell)
+			)
 			//shell 1: Power, Fuel Indicators
-			GaugeGroup("resouces_lifebars",
-				Gauge("power_gauge",
+			GaugeGroup(
+				"resouces_lifebars",
+				Gauge(
+					"power_gauge",
 					type="lifebar",
-					style="perforrated")
+					style="perforrated",
 					color="blue",
 					shape="circular"
 					),
-				Gauge("fuel_gauge",
+				Gauge(
+					"fuel_gauge",
 					type="lifebar",
-					style="perforrated")
+					style="perforrated",
 					color="turquoise",
 					shape="circular"
 					)
-		]
+				)
 
 	}
 
 
+	add_shell(gauge_obj) {
+		/*
+		Append Gauge or GaugeGroup to new shell.
+		*/
+		let shell_num = this.shells.length
+		this.shells.push(gauge_obj.set_shell(shell_num))
+
+		return gauge_obj
+	}
 	add_mph_indicator(threejs_font) {
 		this.add_mph_indicator.push(threejs_font)
 	}

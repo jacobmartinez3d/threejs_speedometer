@@ -19,19 +19,37 @@ class Gague {
 		type="timeslice",
 		icon=null) {
 		/*
-		types:
+		@param name: name of gauge
+		@type: str
+		@param fonts: list of fonts, in order of hierarchy(0-primary,
+			1-secondary, etc) for use in this gauge's display
+		@type: list
+		@param type: type of gaugue
 			timeslice	current numerical value
-			circular	THREE.RingGeometry-based with close-angle setting
+			circular	THREE.RingGeometry-based
 			lifebar		horizontal or vertical "liefebar" style
+		@type: str
+		@param icon: path to img to use as an icon for this gauge
+		@type: str
 		*/
 
 	this.name = name
 	this.fonts = fonts
 	this.type = type
 	this.icon = icon
+	this.shell = null
+
+	// translation
+	this.t = [0, 0, 0]
+	// rotation
+	this.r = [0, 0, 0]
+	// scale
+	this.s = [1, 1, 1]
+	// pivot
+	this.p = this.t
 
 	// instantiate primary and secondary 3d fonts
-	for (i = 1, i <= 2, i++) {
+	for (i = 1, i <= this.fonts.length, i++) {
 
 		font_loader.load( this.fonts[i], function ( font ) {
 
@@ -59,10 +77,19 @@ class Gague {
 	show_icon() {
 		/*
 		Create and show a THREE textured plane with transparency.
-
-		@param icon_index	index of this.icons to show
-		@type int
 		*/
+	}
+	set_shell(shell_num){
+		/*
+		Set the shell-layer of this instance and convert to circular type
+
+		@param shell_num: shell-number to set to
+		@type: int
+		*/
+		this.type = circular
+		this.shell = shell_num
+
+		return this
 	}
 }
 
@@ -70,6 +97,7 @@ class GaugeGroup {
 	constructor(name, ...children) {
 		this.name = name
 		this.children = children
+		this.shell = null
 	}
 	retrieve_child(child_name) {
 		/*
@@ -80,7 +108,6 @@ class GaugeGroup {
 		@returns: Gauge instance 
 		*/
 	}
-
 	update(...target) {
 		/*
 		Update values of children Gaugues and update results visually.
@@ -89,6 +116,11 @@ class GaugeGroup {
 		@type: array
 		@returns: array of updated children
 		*/
+	}
+	set_shell(shell_num){
+		this.shell = shell_num
+
+		return this
 	}
 
 }
