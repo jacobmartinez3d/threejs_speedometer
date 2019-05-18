@@ -1,3 +1,8 @@
+/*
+TODO: come up with a system of exporting uv shell-group data from Maya
+	in a way that would allow easy positioning of gradient and other
+	targetted dynamic texture-alterations.
+*/
 import {Gauge, GaugeGroup, Icon} from "./gauge.js";
 
 class Speedometer extends GaugeGroup {
