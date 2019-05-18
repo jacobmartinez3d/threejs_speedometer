@@ -4,19 +4,19 @@ Basic class functional UI arrangment of fonts, and icons.
 Serves as a way to arrange elements by altering their three.js
 parameters.
 */
-import THREE
+const THREE = require("three");
 
 var font_loader = new THREE.FontLoader();
 
-class Gague {
+class Gauge {
 	//TODO: add validations
 	//TODO: figure out best way to attach to external input driving the gaugue
 	constructor(
 		name,
-		fonts=[
-			"fonts/helvetiker_regular.typeface.json",
-			"fonts/droid_serif_regular.typeface.json"],
-		type="timeslice",
+		type="default",
+		color="default",
+		style="default",
+		shape="default",
 		icon=null) {
 		/*
 		@param name: name of gauge
@@ -34,10 +34,13 @@ class Gague {
 		*/
 
 	this.name = name
-	this.fonts = fonts
 	this.type = type
 	this.icon = icon
 	this.shell = null
+	this.fonts = [
+		"fonts/helvetiker_regular.typeface.json",
+		"fonts/droid_serif_regular.typeface.json"
+		]
 
 	// translation
 	this.t = [0, 0, 0]
@@ -49,7 +52,7 @@ class Gague {
 	this.p = this.t
 
 	// instantiate primary and secondary 3d fonts
-	for (i = 1, i <= this.fonts.length, i++) {
+	for (var i = 1; i <= this.fonts.length; i++) {
 
 		font_loader.load( this.fonts[i], function ( font ) {
 
@@ -86,7 +89,7 @@ class Gague {
 		@param shell_num: shell-number to set to
 		@type: int
 		*/
-		this.type = circular
+		this.type = "circular"
 		this.shell = shell_num
 
 		return this
@@ -94,7 +97,7 @@ class Gague {
 }
 
 class GaugeGroup {
-	constructor(name, ...children) {
+	constructor(name, children) {
 		this.name = name
 		this.children = children
 		this.shell = null
@@ -144,3 +147,5 @@ class Icon {
 		*/
 	}
 }
+
+export default {Gauge, GaugeGroup, Icon}
