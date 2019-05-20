@@ -1,5 +1,5 @@
 /*
-Gauge classes for storing and handling streamed input data and providing a functional interface for updating UI.
+Gauge classes are for storing and handling streamed input data and providing a functional interface for updating UI.
 */
 
 
