@@ -45,7 +45,7 @@ export class Gauge {
 	// 	this.show_icon()
 	// }
 
-	this.__setup()
+	// this.__setup()
 	}
 	
 	show_icon() {
@@ -54,29 +54,29 @@ export class Gauge {
 		*/
 	}
 
-	__setup(){
-		// instantiate primary and secondary 3d fonts
-		this.settings.font_order.forEach( (font_name, i) => { 
+	// __setup(){
+	// 	// instantiate primary and secondary 3d fonts
+	// 	this.settings.font_order.forEach( (font_name, i) => { 
 
-			let font_path = this.settings.font_library[font_name]
+	// 		let font_path = this.settings.font_library[font_name]
 			
-			var font_loader = new THREE.FontLoader();
-			font_loader.load(font_path, font => {
-				let font_geo = new THREE.TextGeometry( 'Hello three.js!', {
-					font: font,
-					size: 80,
-					height: 5,
-					curveSegments: 12,
-					bevelEnabled: true,
-					bevelThickness: 10,
-					bevelSize: 8,
-					bevelOffset: 0,
-					bevelSegments: 5
-				})
-				this.__fonts[font_name] = font_geo
-			});
-		})
-}
+	// 		var font_loader = new THREE.FontLoader();
+	// 		font_loader.load(font_path, font => {
+	// 			let font_geo = new THREE.TextGeometry( 'Hello three.js!', {
+	// 				font: font,
+	// 				size: 80,
+	// 				height: 5,
+	// 				curveSegments: 12,
+	// 				bevelEnabled: true,
+	// 				bevelThickness: 10,
+	// 				bevelSize: 8,
+	// 				bevelOffset: 0,
+	// 				bevelSegments: 5
+	// 			})
+	// 			this.__fonts[font_name] = font_geo
+	// 		});
+	// 	})
+	// }
 }
 
 export class GaugeGroup {
@@ -84,14 +84,30 @@ export class GaugeGroup {
 		this.name = name
 		this.__children = children || {}
 	}
-	retrieve_child(child_name) {
+	add_gauge(name, user_settings){
+
+		let gauge = new Gauge(name, user_settings)
+		this.__children[name] = gauge
+		return gauge
+	}
+	add_gauge_group(name, children){
+		let gauge_group = new GaugeGroup(name, children)
+		this.__children[name] = gauge_group
+	}
+	retrieve_child(target_child_name) {
 		/*
 		Return child Gauge instance by name.
 
-		@param child_name: name of Gauge to retrieve
+		@param target_child_name: name of Gauge to retrieve
 		@type: str
-		@returns: Gauge instance 
+		@returns: Gauge or GaugeGroup instance 
 		*/
+		this.__children.forEach((child_name, child_instance) => {
+
+			if (child_name === target_child_name) {
+				return child_instance
+			}
+		})
 	}
 	update(...target) {
 		/*
