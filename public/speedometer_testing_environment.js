@@ -20,7 +20,7 @@ document.body.onkeydown = function(e){
 			clearInterval(driving_animation)
 		}
 		simulated_gas = 1
-		driving_animation = setInterval(drive, 100)
+		driving_animation = setInterval(drive, 24)
         sb_pressed = true
     }
 }
@@ -38,12 +38,16 @@ function drive(){
 	if (simulated_mph <= 0) {
 		clearInterval(driving_animation)
 		simulated_mph = 0
+	} else if (simulated_mph >= 100) {
+		simulated_mph = 100
 	}
 
 	// EXAMPLE SPEEDOMETER API USAGE:
 	let current_mph = speedometer.update({
 		mph: simulated_mph
 	}).get_mph()
-	
-	console.log("driving at", parseInt(current_mph), "mph")
+
+	// update UI
+	ui.set_mph(current_mph)
+	// console.log("driving at", parseInt(current_mph), "mph")
 }                                                           

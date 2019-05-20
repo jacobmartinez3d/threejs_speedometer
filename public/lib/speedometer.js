@@ -1,11 +1,15 @@
 /*
-TODO: come up with a system of exporting uv shell-group data from Maya
-	in a way that would allow easy positioning of gradient and other
-	targetted dynamic texture-alterations.
+Premade Template for a basic speedometer.
+
+Speedometer is itself a GaugeGroup, made up of other Gages and GaugeGroups.
+The primary role of speedometer is to take in streamed data update events
+(from a vehicle computer for example), update current data with new data, and
+ultimately update the UI.
 */
 import {Gauge, GaugeGroup, Icon} from "./gauge.js";
 
-// demo purposes only. this data would be retrieved from pipeline
+// demo purposes only. this data would be retrieved externally
+// these settings are used as a default for each Gauge instantiated below
 const USER_SETTINGS = {
 	"font_library": {
 		"helvetiker": "../assets/fonts/helvetiker_regular.typeface.json",
@@ -24,11 +28,17 @@ const USER_SETTINGS = {
 
 export default class Speedometer extends GaugeGroup {
 	/*
-	A GaugeGroup template for a basic speedometer.
+	A Centralized access point for a collection of speedometer-Gauges.
 	*/
 	constructor(name, children) {
+		/*
+		Initialize instance with defaults
+
+		@param {String} name name of this Speedometer instance
+		@param {Arr} children (optional)premade Gauge instances to instantiate with 
+		*/
 		super(name, children)
-		// UI properties
+		// values to to be synced with UI:
 		this.mph = 0
 		this.__mpg = 0
 		this.__fuel = 0.00
@@ -42,24 +52,33 @@ export default class Speedometer extends GaugeGroup {
 			"p": "Park",
 			"b": "Engine Break"
 		}
-
+		// establish a primary-secondary font family relationship for font defaults
 		this.font_order = USER_SETTINGS.font_order
 
 		this.__setup()
 	}
 	
 	get_mph(){
-
+		/*
+		Retrieve current mph value
+		*/
 		return this.mph
 	}
-	
+
 	update(update_dict){
+		/*
+		Update this instance with new data
+
+		@param update_dict {Object} JSON object with new properties and values.
+		*/
 		Object.assign(this, update_dict)
-		// here is where we will update the necessary Gauges
 		return this
 	}
 
 	__setup(){
+		/*
+		
+		*/
 		var primary_font = this.font_order[0]
 		var secondary_font = this.font_order[1]
 

@@ -2,57 +2,49 @@ export default class SpeedometerUI {
 	/*
 
 	*/
-	constructor(model){
+	constructor(){
 		/*
 
 		*/
-		this.model = model
-		
+		this.mph = 0
 		// user settings used for scene initialization
 		this.obj_exports_path = "/assets/geo/export/"
 		this.textures_settings = {
-			"/assets/textures/azMapper.png": {
-				name: "gradient",
-				wrapS: THREE.RepeatWrapping,
-				wrapT: THREE.RepeatWrapping
-				// anisotropy: this.renderer.capabilities.getMaxAnisotropy()
-			},
 			"/assets/textures/gradient.png": {
 				name: "gradient",
-				wrapS: THREE.RepeatWrapping,
 				wrapT: THREE.RepeatWrapping
 				// anisotropy: this.renderer.capabilities.getMaxAnisotropy()
 			}
 		}
 		this.materials_settings = {
-			"jacobs_mapper": {
-				"map": "/assets/textures/azMapper.png"
-			},
 			"speed_indicator_inset_mat": {
 				"map": "/assets/textures/gradient.png"
+			},
+			"speed_indicator_ring_mat": {
+				"map": "/assets/textures/ring.png"
 			}
 		}
 		this.objs_settings = {
 			"speed_indicator_ring.obj": {
-				"material": "jacobs_mapper"
+				"material": "speed_indicator_ring_mat"
 			},
 			"speed_indicator_inset.obj": {
 				"material": "speed_indicator_inset_mat"
 			},
 			"fuel_gauge_group.obj": {
-				"material": "jacobs_mapper"
+				"material": "speed_indicator_inset_mat"
 			},
 			"power_gauge_group.obj": {
-				"material": "jacobs_mapper"
+				"material": "speed_indicator_inset_mat"
 			},
 			"fuel_gauge_group_icon.obj": {
-				"material": "jacobs_mapper"
+				"material": "speed_indicator_inset_mat"
 			},
 			"power_gauge_group_icon.obj": {
-				"material": "jacobs_mapper"
+				"material": "speed_indicator_inset_mat"
 			},
 			"drive_state_indicators.obj": {
-				"material": "jacobs_mapper"
+				"material": "speed_indicator_inset_mat"
 			},
 		}
 
@@ -60,14 +52,17 @@ export default class SpeedometerUI {
 		this.__textures = {}
 		this.__materials = {}
 		this.__objs = {}
+		this.__text_geos = {}
+
 		this.__setup_scene()
 			.then(this.__load_textures.bind(this))
 			.then(this.__load_materials.bind(this))
+			.then(this.__update_mph_text.bind(this))
 			.then(this.__load_objs.bind(this))
 			.then(() => {
 				window.addEventListener( 'resize', this.__on_window_resize.bind(this), false )
-				console.log("Scene Loaded Successfully!")
 				this.render()
+				console.log("Scene Loaded Successfully!")
 		})
 		
 	}
@@ -88,15 +83,27 @@ export default class SpeedometerUI {
 		this.render();
 	}
 
-	update_uv_transform() {
+	set_mph(mph){
+		this.mph = mph
+		let translate = mph/100
+		this.__translate_texture(this.__textures["/assets/textures/gradient.png"], translate)
+		
+		// replace text geo
+		this.scene.remove(this.__text_geos.mph_num)
+		this.__update_mph_text().then(() => {
+			this.scene.add(this.__text_geos.mph_num)
+			this.render()
+		})
+
+
+
+	}
+	__translate_texture(texture, translate) {
 		/*
 
-		var texture = mesh.material.map;
-
-		texture.offset.set( API.mph_value, 0 );
-
-		render();
 		*/
+		texture.offset.set( 0, translate*-1 );
+		this.render();
 	}
 
 	assign_material(object, material) {
@@ -122,36 +129,56 @@ export default class SpeedometerUI {
 	}
 
 	__load_textures(){
+		/*
+		*/
+		console.log("loading textures...")
 		let promise = new Promise((resolve) => {
+
 			var texture_loader = new THREE.TextureLoader()
+			let items_processed = 0
+
 			for (var texture_path in this.textures_settings){
+				console.log(texture_path)
 
-				let user_settings = this.textures_settings[texture_path]
-
+				// this function is totally out of sync/order... i cant get it to FUCKING WAIT FOR THE LOOP!
 				texture_loader.load(texture_path, texture => {
+					
+					let user_settings = this.textures_settings[texture_path]
 					Object.assign(texture, user_settings)
 					this.__textures[texture_path] = texture
+
+					items_processed ++
+					
+					if (items_processed >= Object.keys(this.textures_settings).length) {
+						resolve(this.__textures)
+					}
 				})
 			}
-
-			resolve(this.__textures)
 		})
 
 		return promise
 	}
 
 	__load_materials(){
+		/*
+		*/
+		console.log("loading materials...")
 		let promise = new Promise((resolve) => {
+
+			let items_processed = 0
 			for (var material_name in this.materials_settings){
+
 				if (typeof this.materials_settings[material_name].map === String) {
 					let mat_texture_path = this.materials_settings[material_name].map
 					this.materials_settings[material_name].map = this.__textures[mat_texture_path]
 				}
-				// must set to instance here
 				this.materials_settings[material_name].map = this.__textures[this.materials_settings[material_name].map]
-				// console.log(this.materials_settings)
-				// console.log(this.__textures)
-				this.__materials[material_name] = new THREE.MeshStandardMaterial(this.materials_settings[material_name])
+				this.__materials[material_name] = new THREE.MeshBasicMaterial(this.materials_settings[material_name])
+				
+				items_processed ++
+				if (items_processed >= Object.keys(this.materials_settings).length) {
+					resolve(this.__materials)
+				}
 			}
 
 			resolve(this.__materials)
@@ -161,13 +188,14 @@ export default class SpeedometerUI {
 	}
 
 	__load_objs(){
+		console.log("loading objs...")
 		let promise = new Promise((resolve) => {
+
 			var obj_loader = new THREE.OBJLoader();
 			obj_loader.setPath(this.obj_exports_path);
-			var items_processed = 0
 			let mesh
 
-			/////////////// load .obj's from settings
+			let items_processed = 0
 			for (var obj_name in this.objs_settings){
 
 				let user_settings = this.objs_settings[obj_name]
@@ -176,15 +204,52 @@ export default class SpeedometerUI {
 					mesh = this.assign_material(object, material)
 					this.__objs[obj_name] = mesh
 					this.scene.add(mesh)
+
+					if (items_processed >= Object.keys(this.objs_settings).length) {
+						// force render to happen only after this loop is complete
+						resolve(this.__objs)
+					}
 				})
-
-				if (items_processed === this.objs_settings.length) {
-					// force render to happen only after this loop is complete
-					this.render()
-				}
 			}
+		})
 
-			resolve(this.__objs)
+		return promise
+	}
+	
+	__update_mph_text(){
+		console.log("loading texts...")
+		let promise = new Promise((resolve) => {
+
+			var loader = new THREE.FontLoader();
+
+			loader.load( 'assets/fonts/helvetiker_regular.typeface.json', ( font ) => {
+				let text_geo = new THREE.TextGeometry( parseInt(this.mph.toString()), {
+					font: font,
+					size: 1,
+					height: .1,
+					curveSegments: 2,
+					bevelEnabled: false
+
+				} );
+				this.__text_geos["mph_num"] = new THREE.Mesh(text_geo, this.__materials["speed_indicator_ring_mat"])
+				this.scene.add(this.__text_geos["mph_num"])
+
+				resolve(this.__text_geos["mph_num"])
+			} );
+
+			loader.load( 'assets/fonts/helvetiker_regular.typeface.json', ( font ) => {
+				let text_geo = new THREE.TextGeometry( "MPH", {
+					font: font,
+					size: .5,
+					height: .08,
+					curveSegments: 2,
+					bevelEnabled: false
+				} );
+				this.__text_geos["mph_text"] = new THREE.Mesh(text_geo, this.__materials["speed_indicator_ring_mat"])
+				this.scene.add(this.__text_geos["mph_text"])
+
+				resolve(this.__text_geos["mph_text"])
+			} );
 		})
 
 		return promise
