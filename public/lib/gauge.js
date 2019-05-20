@@ -1,106 +1,74 @@
 /*
-Basic class functional UI arrangment of fonts, and icons.
-
-Serves as a way to arrange elements by altering their three.js
-parameters.
+Gauge classes for storing and handling streamed input data and providing a functional interface for updating UI.
 */
 
 
 export class Gauge {
-	//TODO: add validations
-	//TODO: figure out best way to attach to external input driving the gaugue
+	/*
+	Wrapper for data collected from a single streamed input source.
+	*/
 	constructor(name, settings) {
 		/*
-		@param name: name of gauge
-		@type: str
-		@param fonts: list of fonts, in order of hierarchy(0-primary,
-			1-secondary, etc) for use in this gauge's display
-		@type: list
-		@param type: type of gaugue
-			timeslice	current numerical value
-			circular	THREE.RingGeometry-based
-			lifebar		horizontal or vertical "liefebar" style
-		@type: str
-		@param icon: path to img to use as an icon for this gauge
-		@type: str
+		Instantiate this Gauge with given settings.
+
+		@param {String} name name of gauge
+		@param {Object} settings JSON object with initial gauge settings
 		*/
 
 	this.name = name
 	this.settings = settings
-
-	// THREE font instances
-	this.__fonts = {}
-
-	// translation
-	this.t = [0, 0, 0]
-	// rotation
-	this.r = [0, 0, 0]
-	// scale
-	this.s = [1, 1, 1]
-	// pivot
-	this.p = this.t
-
-	// show icon if it was supplied
-	// if (this.settings.icon) {
-	// 	this.show_icon()
-	// }
-
-	// this.__setup()
 	}
-	
-	show_icon() {
+	update(new_settings){
 		/*
-		Create and show a THREE textured plane with transparency.
+		Update this Gauge instance with new data
+
+		@param new_settings {Object} JSON object with new settings.
 		*/
+		Object.assign(this.settings, new_settings)
 	}
-
-	// __setup(){
-	// 	// instantiate primary and secondary 3d fonts
-	// 	this.settings.font_order.forEach( (font_name, i) => { 
-
-	// 		let font_path = this.settings.font_library[font_name]
-			
-	// 		var font_loader = new THREE.FontLoader();
-	// 		font_loader.load(font_path, font => {
-	// 			let font_geo = new THREE.TextGeometry( 'Hello three.js!', {
-	// 				font: font,
-	// 				size: 80,
-	// 				height: 5,
-	// 				curveSegments: 12,
-	// 				bevelEnabled: true,
-	// 				bevelThickness: 10,
-	// 				bevelSize: 8,
-	// 				bevelOffset: 0,
-	// 				bevelSegments: 5
-	// 			})
-	// 			this.__fonts[font_name] = font_geo
-	// 		});
-	// 	})
-	// }
 }
 
 export class GaugeGroup {
+	/*
+	Wrapper to centralize data of multiple Gauges.
+	*/
 	constructor(name, children) {
+		/*
+		Instantiate with optional premade gauges
+
+		@param {String} name name of this GagueGroup instance
+		@param {Arr} children (optional)Array of Gauge instances to be included as children
+		*/
 		this.name = name
 		this.__children = children || {}
 	}
 	add_gauge(name, user_settings){
+		/*
+		Add new Gauge instance as child to this GagueGroup
 
+		@param {String} name name of new Gauge
+		@param {Object} user_settings JSON containing initial Gauge settings
+		*/
 		let gauge = new Gauge(name, user_settings)
 		this.__children[name] = gauge
 		return gauge
 	}
 	add_gauge_group(name, children){
+		/*
+		Add new GaugeGroup instance as child to this GaugeGroup
+
+		@param {String} name name of new GaugeGroup
+		@param {Arr} children (optional)child-Gauges to instantiate with 
+		*/
 		let gauge_group = new GaugeGroup(name, children)
 		this.__children[name] = gauge_group
 	}
 	retrieve_child(target_child_name) {
 		/*
-		Return child Gauge instance by name.
+		Retrieve child Gauge instance by name.
 
-		@param target_child_name: name of Gauge to retrieve
-		@type: str
-		@returns: Gauge or GaugeGroup instance 
+		@param {String} target_child_name name of Gauge to retrieve
+		@returns {Gauge || GaugeGroup}
 		*/
 		this.__children.forEach((child_name, child_instance) => {
 
@@ -109,39 +77,28 @@ export class GaugeGroup {
 			}
 		})
 	}
-	update(...target) {
-		/*
-		Update values of children Gaugues and update results visually.
-
-		@param target: children to update
-		@type: array
-		@returns: array of updated children
-		*/
-	}
-	set_shell(shell_num){
-		this.shell = shell_num
-
-		return this
-	}
-
 }
 
-export class Icon {
+export class Icon extends Gauge {
 	/*
 	Wrapper for THREE object to behave as an icon with positional settings.
 	*/
-	constructor(path, orientation=9) {
-		this.path = path
-		this.orientation = orientation
+	constructor(name, settings) {
+		super(name, settings)
 	}
 
-	set_position(orientation) {
+	update_path(new_path) {
 		/*
-		Apply translation settings to the THREE object to reflect orientation
-
-		@param orientation: Clock-style integer representing orientation
-		@type: int
-		@returns orientation value
+		Update the img path this icon is sourcing from
 		*/
+		this.settings.path = new_path
+	}
+	update_orientaion(new_orientation) {
+		/*
+		Update the orientation setting for this icon to its parent
+
+		orientation can be "l" (left), "r" (right), "t" (top), "b" (bottom)
+		*/
+		this.settings.orientation = new_orientation
 	}
 }

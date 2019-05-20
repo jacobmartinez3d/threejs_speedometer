@@ -1,3 +1,13 @@
+/*
+This script demonstrates how the Speedometer(model) core functionality
+is designed to be decoupled and separate from the UI.
+
+I have attempted to mimick receiving streamed input data from an
+external source(like a vehicle computer). This input would be recieved
+and handled by the Speedometer, then an appropriate response sent to
+the UI.
+*/
+
 import SpeedometerUI from "/speedometer_ui.js";
 import Speedometer from "/lib/speedometer.js";
 
@@ -49,5 +59,4 @@ function drive(){
 
 	// update UI
 	ui.set_mph(current_mph)
-	// console.log("driving at", parseInt(current_mph), "mph")
 }                                                           

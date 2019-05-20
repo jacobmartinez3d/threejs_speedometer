@@ -1,19 +1,23 @@
 export default class SpeedometerUI {
 	/*
-
+	A THREE.js implementation of a UI for Speedometer
 	*/
 	constructor(){
 		/*
+		Instantiate with external scene settings, and build/render THREE.js scene
 
+		The idea of the texture/materials/objs settings below is to mimick Maya's Hypershade where one could have a
+		premade library of 'shaders' that would re-instantiate themselves on SpeedometerUI's init.
 		*/
 		this.mph = 0
-		// user settings used for scene initialization
+
+		// (demo purposes only. Below data would be retrieved externally)
+		// scene settings used for scene initialization
 		this.obj_exports_path = "/assets/geo/export/"
 		this.textures_settings = {
 			"/assets/textures/gradient.png": {
 				name: "gradient",
 				wrapT: THREE.RepeatWrapping
-				// anisotropy: this.renderer.capabilities.getMaxAnisotropy()
 			}
 		}
 		this.materials_settings = {
@@ -48,42 +52,47 @@ export default class SpeedometerUI {
 			},
 		}
 
-		// THREE object instances created from user settings
+		// all instantiated THREE.js resources stored here
 		this.__textures = {}
 		this.__materials = {}
 		this.__objs = {}
 		this.__text_geos = {}
 
+		// promise daisy-chain to ensure dependencies are respected when re-instantiating from scene-settings
 		this.__setup_scene()
 			.then(this.__load_textures.bind(this))
 			.then(this.__load_materials.bind(this))
 			.then(this.__update_mph_text.bind(this))
 			.then(this.__load_objs.bind(this))
 			.then(() => {
-				window.addEventListener( 'resize', this.__on_window_resize.bind(this), false )
 				this.render()
 				console.log("Scene Loaded Successfully!")
 		})
 		
+		window.addEventListener( 'resize', this.__on_window_resize.bind(this), false )
 	}
 
 	render() {
 		/*
-
+		Force scene to re-render
 		*/
 		this.renderer.render( this.scene, this.camera );
-
 	}
 
 	update() {
 		/*
-
+		Update controls and force re-render
 		*/
 		this.controls.update();
 		this.render();
 	}
 
 	set_mph(mph){
+		/*
+		Set mph value and update any associated elements in the scene.
+
+		@param {Int} mph new MPH value to set
+		*/
 		this.mph = mph
 		let translate = mph/100
 		this.__translate_texture(this.__textures["/assets/textures/gradient.png"], translate)
@@ -94,13 +103,13 @@ export default class SpeedometerUI {
 			this.scene.add(this.__text_geos.mph_num)
 			this.render()
 		})
-
-
-
 	}
 	__translate_texture(texture, translate) {
 		/*
+		Translate/offset texture vertically for sweeping-effect
 
+		@param {THREE.Texture} texture Texture instance to translate
+		@param {Int} translate 0-1 position value
 		*/
 		texture.offset.set( 0, translate*-1 );
 		this.render();
@@ -108,6 +117,10 @@ export default class SpeedometerUI {
 
 	assign_material(object, material) {
 		/*
+		Assign material to an object correctly in case it is a Group object.
+
+		@param {THREE.Mesh || THREE.Group} object mesh object instance to assign material to
+		@param {THREE.Material} material material instance to assign
 		*/
 		object.traverse(child => {
 			if (child.isMesh) child.material = material
@@ -117,12 +130,10 @@ export default class SpeedometerUI {
 
 	__on_window_resize() {
 		/*
-
+		Resize scene to browser window automatically on resizing
 		*/
 		this.camera.aspect = window.innerWidth / window.innerHeight;
-
 		this.camera.updateProjectionMatrix();
-
 		this.renderer.setSize( window.innerWidth, window.innerHeight );
 
 		this.render();
@@ -130,6 +141,7 @@ export default class SpeedometerUI {
 
 	__load_textures(){
 		/*
+		Instantiate a THREE.Texture instance for each scene-settings entry
 		*/
 		console.log("loading textures...")
 		let promise = new Promise((resolve) => {
@@ -140,7 +152,7 @@ export default class SpeedometerUI {
 			for (var texture_path in this.textures_settings){
 				console.log(texture_path)
 
-				// this function is totally out of sync/order... i cant get it to FUCKING WAIT FOR THE LOOP!
+				// TODO: this function is totally out of sync/order...
 				texture_loader.load(texture_path, texture => {
 					
 					let user_settings = this.textures_settings[texture_path]
@@ -161,6 +173,7 @@ export default class SpeedometerUI {
 
 	__load_materials(){
 		/*
+		Instantiate a THREE.Material instance for each scene-settings entry
 		*/
 		console.log("loading materials...")
 		let promise = new Promise((resolve) => {
@@ -188,6 +201,9 @@ export default class SpeedometerUI {
 	}
 
 	__load_objs(){
+		/*
+		Instantiate a THREE.Mesh instance for each scene-settings entry
+		*/
 		console.log("loading objs...")
 		let promise = new Promise((resolve) => {
 
@@ -217,6 +233,9 @@ export default class SpeedometerUI {
 	}
 	
 	__update_mph_text(){
+		/*
+		Update the MPH text by removing the old one and re-insantiating a new one.
+		*/
 		console.log("loading texts...")
 		let promise = new Promise((resolve) => {
 
@@ -254,9 +273,10 @@ export default class SpeedometerUI {
 
 		return promise
 	}
+	
 	__setup_scene(){
 		/*
-
+		Instantiate base elements for THREE.js scene
 		*/
 		let promise = new Promise(resolve => {
 			// scene

@@ -77,7 +77,7 @@ export default class Speedometer extends GaugeGroup {
 
 	__setup(){
 		/*
-		
+		Instantiate all sub Gauges and GaugeGroups for Speedometer
 		*/
 		var primary_font = this.font_order[0]
 		var secondary_font = this.font_order[1]
