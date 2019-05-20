@@ -4,20 +4,12 @@ Basic class functional UI arrangment of fonts, and icons.
 Serves as a way to arrange elements by altering their three.js
 parameters.
 */
-const THREE = require("three");
 
-var font_loader = new THREE.FontLoader();
 
-class Gauge {
+export class Gauge {
 	//TODO: add validations
 	//TODO: figure out best way to attach to external input driving the gaugue
-	constructor(
-		name,
-		type="default",
-		color="default",
-		style="default",
-		shape="default",
-		icon=null) {
+	constructor(name, settings) {
 		/*
 		@param name: name of gauge
 		@type: str
@@ -34,13 +26,10 @@ class Gauge {
 		*/
 
 	this.name = name
-	this.type = type
-	this.icon = icon
-	this.shell = null
-	this.fonts = [
-		"fonts/helvetiker_regular.typeface.json",
-		"fonts/droid_serif_regular.typeface.json"
-		]
+	this.settings = settings
+
+	// THREE font instances
+	this.__fonts = {}
 
 	// translation
 	this.t = [0, 0, 0]
@@ -51,30 +40,12 @@ class Gauge {
 	// pivot
 	this.p = this.t
 
-	// instantiate primary and secondary 3d fonts
-	for (var i = 1; i <= this.fonts.length; i++) {
-
-		font_loader.load( this.fonts[i], function ( font ) {
-
-			this.fonts.push(new THREE.TextGeometry( '00', {
-				font: font,
-				size: i*25,
-				height: i*2,
-				curveSegments: 12,
-				bevelEnabled: true,
-				bevelThickness: 2,
-				bevelSize: 2,
-				bevelOffset: 0,
-				bevelSegments: 1
-			}))
-		});
-	}
-
 	// show icon if it was supplied
-	if (this.icon) {
-		this.show_icon()
-	}
+	// if (this.settings.icon) {
+	// 	this.show_icon()
+	// }
 
+	this.__setup()
 	}
 	
 	show_icon() {
@@ -82,25 +53,36 @@ class Gauge {
 		Create and show a THREE textured plane with transparency.
 		*/
 	}
-	set_shell(shell_num){
-		/*
-		Set the shell-layer of this instance and convert to circular type
 
-		@param shell_num: shell-number to set to
-		@type: int
-		*/
-		this.type = "circular"
-		this.shell = shell_num
+	__setup(){
+		// instantiate primary and secondary 3d fonts
+		this.settings.font_order.forEach( (font_name, i) => { 
 
-		return this
-	}
+			let font_path = this.settings.font_library[font_name]
+			
+			var font_loader = new THREE.FontLoader();
+			font_loader.load(font_path, font => {
+				let font_geo = new THREE.TextGeometry( 'Hello three.js!', {
+					font: font,
+					size: 80,
+					height: 5,
+					curveSegments: 12,
+					bevelEnabled: true,
+					bevelThickness: 10,
+					bevelSize: 8,
+					bevelOffset: 0,
+					bevelSegments: 5
+				})
+				this.__fonts[font_name] = font_geo
+			});
+		})
+}
 }
 
-class GaugeGroup {
+export class GaugeGroup {
 	constructor(name, children) {
 		this.name = name
-		this.children = children
-		this.shell = null
+		this.__children = children || {}
 	}
 	retrieve_child(child_name) {
 		/*
@@ -128,7 +110,7 @@ class GaugeGroup {
 
 }
 
-class Icon {
+export class Icon {
 	/*
 	Wrapper for THREE object to behave as an icon with positional settings.
 	*/
@@ -147,5 +129,3 @@ class Icon {
 		*/
 	}
 }
-
-export default {Gauge, GaugeGroup, Icon}

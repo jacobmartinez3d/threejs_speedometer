@@ -1,39 +1,4 @@
-//TODO should load this from a config.json
-const OBJ_EXPORTS = "/assets/geo/export/"
-const OBJ_LIST = [
-	{
-		name: "speed_indicator_ring.obj",
-		texture: "/assets/textures/azMapper.jpg"
-	},
-	{
-		name: "speed_indicator_inset.obj",
-		texture: "/assets/textures/azMapper.jpg"
-	},
-	{
-		name: "fuel_gauge_group.obj",
-		texture: "/assets/textures/azMapper.jpg"
-	},
-	{
-		name: "power_gauge_group.obj",
-		texture: "/assets/textures/azMapper.jpg"
-	},
-	{
-		name: "fuel_gauge_group_icon.obj",
-		texture: "/assets/textures/azMapper.jpg"
-	},
-	{
-		name: "power_gauge_group_icon.obj",
-		texture: "/assets/textures/azMapper.jpg"
-	},
-	{
-		name: "drive_state_indicators.obj",
-		texture: "/assets/textures/azMapper.jpg"
-	}]
-CONFIG = {
-
-}
-
-class SpeedometerUI {
+export default class SpeedometerUI {
 	/*
 
 	*/
@@ -42,11 +7,52 @@ class SpeedometerUI {
 
 		*/
 		this.model = model
-		this._obj_list = OBJ_LIST
+		
+		// user settings used for scene initialization
+		this.obj_exports_path = "/assets/geo/export/"
+		this.textures_settings = {
+			"/assets/textures/azMapper.jpg": {
+				name: "gradient",
+				wrapS: THREE.RepeatWrapping,
+				wrapT: THREE.RepeatWrapping
+				// anisotropy: this.renderer.capabilities.getMaxAnisotropy()
+			}
+		}
+		this.materials_settings = {
+			"speed_indicator_ring_mat": {}
+		}
+		this.objs_settings = {
+			"speed_indicator_ring.obj": {
+				"texture": "/assets/textures/azMapper.jpg"
+			},
+			"speed_indicator_inset.obj": {
+				"texture": "/assets/textures/azMapper.jpg"
+			},
+			"fuel_gauge_group.obj": {
+				"texture": "/assets/textures/azMapper.jpg"
+			},
+			"power_gauge_group.obj": {
+				"texture": "/assets/textures/azMapper.jpg"
+			},
+			"fuel_gauge_group_icon.obj": {
+				"texture": "/assets/textures/azMapper.jpg"
+			},
+			"power_gauge_group_icon.obj": {
+				"texture": "/assets/textures/azMapper.jpg"
+			},
+			"drive_state_indicators.obj": {
+				"texture": "/assets/textures/azMapper.jpg"
+			},
+		}
+
+		// THREE object instances created from user settings
+		this.__textures = {}
+		this.__materials = {}
+		this.__objs = {}
 
 		this.__setup_scene()
+		
 	}
-
 
 	render() {
 		/*
@@ -75,6 +81,14 @@ class SpeedometerUI {
 		*/
 	}
 
+	assign_texture(object, texture) {
+		/*
+		*/
+		object.traverse(child => {
+			if (child.isMesh) child.material.map = texture
+		})
+		return object
+	}
 
 	__on_window_resize() {
 		/*
@@ -99,64 +113,7 @@ class SpeedometerUI {
 		// camera
 		this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 1000 );
 		this.camera.position.z = 10;
-
-
-		// load all custom .obj's
-		var obj_loader = new THREE.OBJLoader();
-		obj_loader.setPath(OBJ_EXPORTS);
 		
-		var items_processed = 0
-
-		var material = new THREE.MeshStandardMaterial({
-			wireframe: true,
-			opacity: 0.25,
-			transparent: true
-		});
-
-		obj_loader.load("speed_indicator_ring.obj", object => {
-			var texture_loader = new THREE.TextureLoader()
-
-			texture_loader.load("assets/textures/azMapper.jpg", map => {
-				// map settings
-				map.wrapS = map.wrapT = THREE.RepeatWrapping;
-				map.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
-				material.map = map
-				object.material = material
-
-				object.traverse( function ( child ) {
-
-					if ( child.isMesh ) child.material.map = map;
-
-				} );
-
-				this.scene.add(object)
-				this.render()
-			})
-		})
-
-		// this._obj_list.forEach(obj_dict => {
-		// 	// use each obj_dict to load .obj model and assign associated texture
-		// 	var obj_name = obj_dict["name"]
-
-		// 	obj_loader.load(obj_name, object => {
-		// 		// create textured THREE.Mesh object and bind directly to 'this' as a property
-		// 		// thus, it is treated directly as our UI element implementation
-		// 		this[obj_name] = this.textured_mesh(object, obj_dict, mesh => {
-		// 			// callback to run after texture is fully loaded
-		// 			console.log("adding", mesh, "to scene")
-		// 			this.scene.add(mesh)
-		// 			items_processed++;
-
-		// 			if (items_processed === this._obj_list.length) {
-		// 				// force render to happen only after this loop is complete
-		// 				this.render()
-		// 				window.addEventListener( 'resize', this.__on_window_resize.bind(this), false )			
-		// 				}
-		// 			return mesh
-		// 			})
-		// 		});
-		// })
-
 		// lights
 		this.keyLight = new THREE.DirectionalLight(new THREE.Color("hsl(30, 100%, 75%)"), 1.0);
 		this.keyLight.position.set(-100, 0, 100);
@@ -184,34 +141,49 @@ class SpeedometerUI {
 		this.controls.dampingFactor = 0.25;
 		this.controls.enableZoom = true;
 
+		/////////////// instantiate temporary loaders
+		var obj_loader = new THREE.OBJLoader();
+		obj_loader.setPath(this.obj_exports_path);
+		var texture_loader = new THREE.TextureLoader()
+
+		/////////////// load materials from settings
+		for (var material_name in this.materials_settings){
+
+			let user_settings = this.materials_settings[material_name]
+			this.__materials[material_name] = new THREE.MeshStandardMaterial(user_settings)
+		}
+
+		/////////////// load textures from settings
+		for (var texture_path in this.textures_settings){
+
+			let user_settings = this.textures_settings[texture_path]
+			texture_loader.load(texture_path, texture => {
+				// assign user settings to texture object
+				Object.assign(texture, user_settings)
+				this.__textures[texture_path] = texture
+			})
+		}
+
+		var items_processed = 0
+		let mesh
+
+		/////////////// load .obj's from settings
+		for (var obj_name in this.objs_settings){
+
+			let user_settings = this.objs_settings[obj_name]
+			obj_loader.load(obj_name, object => {
+				let texture = this.__textures[user_settings.texture]
+				mesh = this.assign_texture(object, texture)
+				this.__objs[obj_name] = mesh
+				this.scene.add(mesh)
+			})
+
+			if (items_processed === this.objs_settings.length) {
+				// force render to happen only after this loop is complete
+				this.render()
+			}
+		}
+
+		window.addEventListener( 'resize', this.__on_window_resize.bind(this), false )			
 	}
-
-	// textured_mesh(object, obj_dict, callback) {
-	// 	/*
-
-	// 	*/
-	// 	var name = obj_dict["name"]
-	// 	var texture = obj_dict["texture"]
-
-	// 	var material = new THREE.MeshStandardMaterial({
-	// 				wireframe: true,
-	// 				opacity: 0.25,
-	// 				transparent: true
-	// 			});
-	// 	// create THREE.Texture out of string
-	// 	var texture_loader = new THREE.TextureLoader()
-
-	// 	texture_loader.load(texture, map => {
-	// 		// map settings
-	// 		map.wrapS = map.wrapT = THREE.RepeatWrapping;
-	// 		map.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
-	// 		material.map = map
-	// 		material.needsUpdate = true
-	// 		console.log("setting", material, "to", object)
-	// 		object.material = material
-	// 		return callback(object)
-	// 	})
-	// }
 }
-
-speedometer = new SpeedometerUI()
