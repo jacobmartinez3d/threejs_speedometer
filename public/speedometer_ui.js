@@ -26,6 +26,9 @@ export default class SpeedometerUI {
 			},
 			"speed_indicator_ring_mat": {
 				"map": "/assets/textures/ring.png"
+			},
+			"azMapper": {
+				"map": "/assets/textures/azMapper.png"
 			}
 		}
 		this.objs_settings = {
@@ -36,20 +39,28 @@ export default class SpeedometerUI {
 				"material": "speed_indicator_inset_mat"
 			},
 			"fuel_gauge_group.obj": {
-				"material": "speed_indicator_inset_mat"
+				"material": "azMapper"
 			},
 			"power_gauge_group.obj": {
-				"material": "speed_indicator_inset_mat"
+				"material": "azMapper"
 			},
 			"fuel_gauge_group_icon.obj": {
-				"material": "speed_indicator_inset_mat"
+				"material": "azMapper"
 			},
 			"power_gauge_group_icon.obj": {
-				"material": "speed_indicator_inset_mat"
+				"material": "azMapper"
 			},
 			"drive_state_indicators.obj": {
-				"material": "speed_indicator_inset_mat"
+				"material": "azMapper"
 			},
+		}
+		this.text_geos_settings = {
+			"mph_num": {
+				"translate": {"x": -1.3, "y": 0, "z": -.03}
+			},
+			"mph_text": {
+				"translate": {"x": -.7, "y": -1, "z": 0}
+			}
 		}
 
 		// all instantiated THREE.js resources stored here
@@ -87,7 +98,7 @@ export default class SpeedometerUI {
 		this.render();
 	}
 
-	set_mph(mph){
+	set_mph(mph) {
 		/*
 		Set mph value and update any associated elements in the scene.
 
@@ -104,6 +115,19 @@ export default class SpeedometerUI {
 			this.render()
 		})
 	}
+
+	translate(object, vector3) {
+		/*
+		Apply translation values to a mesh
+
+		@param {THREE.Mesh} object mesh to apply translations to
+		@param {vector3} vector3 x, y, z values to set
+		*/
+		object.translateX(vector3.x)
+		object.translateY(vector3.y)
+		object.translateZ(vector3.z)
+	}
+
 	__translate_texture(texture, translate) {
 		/*
 		Translate/offset texture vertically for sweeping-effect
@@ -139,17 +163,17 @@ export default class SpeedometerUI {
 		this.render();
 	}
 
-	__load_textures(){
+	__load_textures() {
 		/*
 		Instantiate a THREE.Texture instance for each scene-settings entry
 		*/
 		console.log("loading textures...")
 		let promise = new Promise((resolve) => {
 
-			var texture_loader = new THREE.TextureLoader()
 			let items_processed = 0
 
 			for (var texture_path in this.textures_settings){
+				var texture_loader = new THREE.TextureLoader()
 				console.log(texture_path)
 
 				// TODO: this function is totally out of sync/order...
@@ -171,7 +195,7 @@ export default class SpeedometerUI {
 		return promise
 	}
 
-	__load_materials(){
+	__load_materials() {
 		/*
 		Instantiate a THREE.Material instance for each scene-settings entry
 		*/
@@ -200,16 +224,16 @@ export default class SpeedometerUI {
 		return promise
 	}
 
-	__load_objs(){
+	__load_objs() {
 		/*
 		Instantiate a THREE.Mesh instance for each scene-settings entry
 		*/
 		console.log("loading objs...")
 		let promise = new Promise((resolve) => {
 
+			let mesh
 			var obj_loader = new THREE.OBJLoader();
 			obj_loader.setPath(this.obj_exports_path);
-			let mesh
 
 			let items_processed = 0
 			for (var obj_name in this.objs_settings){
@@ -232,29 +256,51 @@ export default class SpeedometerUI {
 		return promise
 	}
 	
-	__update_mph_text(){
+	__update_mph_text() {
 		/*
 		Update the MPH text by removing the old one and re-insantiating a new one.
 		*/
-		console.log("loading texts...")
-		let promise = new Promise((resolve) => {
+		// let promise = new Promise((resolve) => {
+		// 	let items_processed = 0
+		// 	for(var text_geo_name in this.__text_geos_settings){
+		// 		var font_loader = new THREE.FontLoader();
+		// 		// TODO pull this from settings dont hard-code
+		// 		font_loader.load('assets/fonts/helvetiker_regular.typeface.json', ( font ) => {
+		// 			let text_geo = new THREE.TextGeometry( ), {
+		// 				font: font,
+		// 				size: 1,
+		// 				height: .1,
+		// 				curveSegments: 2,
+		// 				bevelEnabled: false
 
-			var loader = new THREE.FontLoader();
+		// 			} );
+		// 		})
+		// 	}
+		// })
+
+		var loader = new THREE.FontLoader();
+		let promise = new Promise((resolve) => {
 
 			loader.load( 'assets/fonts/helvetiker_regular.typeface.json', ( font ) => {
 				let text_geo = new THREE.TextGeometry( parseInt(this.mph.toString()), {
 					font: font,
-					size: 1,
+					size: 1.8,
 					height: .1,
-					curveSegments: 2,
+					curveSegments: 5,
 					bevelEnabled: false
 
 				} );
-				this.__text_geos["mph_num"] = new THREE.Mesh(text_geo, this.__materials["speed_indicator_ring_mat"])
-				this.scene.add(this.__text_geos["mph_num"])
+				let name = "mph_num"
+				this.__text_geos[name] = new THREE.Mesh(text_geo, this.__materials["speed_indicator_ring_mat"])
+				
+				this.translate(this.__text_geos[name], this.text_geos_settings[name].translate)
+				
+				this.scene.add(this.__text_geos[name])
 
-				resolve(this.__text_geos["mph_num"])
+				resolve(this.__text_geos[name])
 			} );
+
+			name = "mph_text"
 
 			loader.load( 'assets/fonts/helvetiker_regular.typeface.json', ( font ) => {
 				let text_geo = new THREE.TextGeometry( "MPH", {
@@ -264,17 +310,20 @@ export default class SpeedometerUI {
 					curveSegments: 2,
 					bevelEnabled: false
 				} );
-				this.__text_geos["mph_text"] = new THREE.Mesh(text_geo, this.__materials["speed_indicator_ring_mat"])
-				this.scene.add(this.__text_geos["mph_text"])
+				this.__text_geos[name] = new THREE.Mesh(text_geo, this.__materials["speed_indicator_ring_mat"])
+				
+				this.translate(this.__text_geos[name], this.text_geos_settings[name].translate)
 
-				resolve(this.__text_geos["mph_text"])
+				this.scene.add(this.__text_geos[name])
+
+				resolve(this.__text_geos[name])
 			} );
 		})
 
 		return promise
 	}
 	
-	__setup_scene(){
+	__setup_scene() {
 		/*
 		Instantiate base elements for THREE.js scene
 		*/
