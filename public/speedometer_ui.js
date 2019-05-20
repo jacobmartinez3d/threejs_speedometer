@@ -26,10 +26,10 @@ export default class SpeedometerUI {
 		}
 		this.materials_settings = {
 			"jacobs_mapper": {
-				"map_name": "/assets/textures/azMapper.png"
+				"map": "/assets/textures/azMapper.png"
 			},
 			"speed_indicator_inset_mat": {
-				"map_name": "/assets/textures/gradient.png"
+				"map": "/assets/textures/gradient.png"
 			}
 		}
 		this.objs_settings = {
@@ -60,8 +60,15 @@ export default class SpeedometerUI {
 		this.__textures = {}
 		this.__materials = {}
 		this.__objs = {}
-
 		this.__setup_scene()
+			.then(this.__load_textures.bind(this))
+			.then(this.__load_materials.bind(this))
+			.then(this.__load_objs.bind(this))
+			.then(() => {
+				window.addEventListener( 'resize', this.__on_window_resize.bind(this), false )
+				console.log("Scene Loaded Successfully!")
+				this.render()
+		})
 		
 	}
 
@@ -114,92 +121,116 @@ export default class SpeedometerUI {
 		this.render();
 	}
 
+	__load_textures(){
+		let promise = new Promise((resolve) => {
+			var texture_loader = new THREE.TextureLoader()
+			for (var texture_path in this.textures_settings){
+
+				let user_settings = this.textures_settings[texture_path]
+
+				texture_loader.load(texture_path, texture => {
+					Object.assign(texture, user_settings)
+					this.__textures[texture_path] = texture
+				})
+			}
+
+			resolve(this.__textures)
+		})
+
+		return promise
+	}
+
+	__load_materials(){
+		let promise = new Promise((resolve) => {
+			for (var material_name in this.materials_settings){
+				if (typeof this.materials_settings[material_name].map === String) {
+					let mat_texture_path = this.materials_settings[material_name].map
+					this.materials_settings[material_name].map = this.__textures[mat_texture_path]
+				}
+				// must set to instance here
+				this.materials_settings[material_name].map = this.__textures[this.materials_settings[material_name].map]
+				// console.log(this.materials_settings)
+				// console.log(this.__textures)
+				this.__materials[material_name] = new THREE.MeshStandardMaterial(this.materials_settings[material_name])
+			}
+
+			resolve(this.__materials)
+		})
+
+		return promise
+	}
+
+	__load_objs(){
+		let promise = new Promise((resolve) => {
+			var obj_loader = new THREE.OBJLoader();
+			obj_loader.setPath(this.obj_exports_path);
+			var items_processed = 0
+			let mesh
+
+			/////////////// load .obj's from settings
+			for (var obj_name in this.objs_settings){
+
+				let user_settings = this.objs_settings[obj_name]
+				obj_loader.load(obj_name, object => {
+					let material = this.__materials[user_settings.material]
+					mesh = this.assign_material(object, material)
+					this.__objs[obj_name] = mesh
+					this.scene.add(mesh)
+				})
+
+				if (items_processed === this.objs_settings.length) {
+					// force render to happen only after this loop is complete
+					this.render()
+				}
+			}
+
+			resolve(this.__objs)
+		})
+
+		return promise
+	}
 	__setup_scene(){
 		/*
 
 		*/
-		// scene
-		this.scene = new THREE.Scene();
+		let promise = new Promise(resolve => {
+			// scene
+			this.scene = new THREE.Scene();
 
-		// camera
-		this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 1000 );
-		this.camera.position.z = 10;
-		
-		// lights
-		this.keyLight = new THREE.DirectionalLight(new THREE.Color("hsl(30, 100%, 75%)"), 1.0);
-		this.keyLight.position.set(-100, 0, 100);
+			// camera
+			this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 1000 );
+			this.camera.position.z = 10;
+			
+			// lights
+			this.keyLight = new THREE.DirectionalLight(new THREE.Color("hsl(30, 100%, 75%)"), 1.0);
+			this.keyLight.position.set(-100, 0, 100);
 
-		this.fillLight = new THREE.DirectionalLight(new THREE.Color("hsl(240, 100%, 75%)"), 0.75);
-		this.fillLight.position.set(100, 0, 100);
+			this.fillLight = new THREE.DirectionalLight(new THREE.Color("hsl(240, 100%, 75%)"), 0.75);
+			this.fillLight.position.set(100, 0, 100);
 
-		this.backLight = new THREE.DirectionalLight(0xffffff, 1.0);
-		this.backLight.position.set(100, 0, -100).normalize();
+			this.backLight = new THREE.DirectionalLight(0xffffff, 1.0);
+			this.backLight.position.set(100, 0, -100).normalize();
 
-		this.scene.add(this.keyLight);
-		this.scene.add(this.fillLight);
-		this.scene.add(this.backLight);
+			this.scene.add(this.keyLight);
+			this.scene.add(this.fillLight);
+			this.scene.add(this.backLight);
 
-		// renderer
-		this.renderer = new THREE.WebGLRenderer();
-		this.renderer.setPixelRatio( window.devicePixelRatio );
-		this.renderer.setSize( window.innerWidth, window.innerHeight );
-		document.body.appendChild( this.renderer.domElement );
-		
-		// controls
-		this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
-		this.controls.addEventListener( 'change', this.render.bind(this) );
-		this.controls.enableDamping = true;
-		this.controls.dampingFactor = 0.25;
-		this.controls.enableZoom = true;
+			// renderer
+			this.renderer = new THREE.WebGLRenderer();
+			this.renderer.setPixelRatio( window.devicePixelRatio );
+			this.renderer.setSize( window.innerWidth, window.innerHeight );
+			document.body.appendChild( this.renderer.domElement );
+			
+			// controls
+			this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+			this.controls.addEventListener( 'change', this.render.bind(this) );
+			this.controls.enableDamping = true;
+			this.controls.dampingFactor = 0.25;
+			this.controls.enableZoom = true;
 
-		/////////////// instantiate temporary loaders
-		var obj_loader = new THREE.OBJLoader();
-		obj_loader.setPath(this.obj_exports_path);
-		var texture_loader = new THREE.TextureLoader()
+			resolve(true)
+		})
 
-
-		/////////////// load textures from settings
-		for (var texture_path in this.textures_settings){
-
-			let user_settings = this.textures_settings[texture_path]
-			texture_loader.load(texture_path, texture => {
-				// assign user settings to texture object
-				Object.assign(texture, user_settings)
-				this.__textures[texture_path] = texture
-			})
-			console.log(this.__textures)
-		}
-
-		/////////////// load materials from settings
-		for (var material_name in this.materials_settings){
-
-			let user_settings = this.materials_settings[material_name]
-			user_settings.map = this.__textures[user_settings.map_name]
-			// console.log(user_settings)
-			// console.log(this.__textures)
-			// this.__materials[material_name] = new THREE.MeshStandardMaterial(user_settings)
-		}
-
-		var items_processed = 0
-		let mesh
-
-		/////////////// load .obj's from settings
-		for (var obj_name in this.objs_settings){
-
-			let user_settings = this.objs_settings[obj_name]
-			obj_loader.load(obj_name, object => {
-				let material = this.__materials[user_settings.material]
-				mesh = this.assign_material(object, material)
-				this.__objs[obj_name] = mesh
-				this.scene.add(mesh)
-			})
-
-			if (items_processed === this.objs_settings.length) {
-				// force render to happen only after this loop is complete
-				this.render()
-			}
-		}
-
-		window.addEventListener( 'resize', this.__on_window_resize.bind(this), false )			
+		return promise
 	}
-}
+}	
