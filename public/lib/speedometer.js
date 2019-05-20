@@ -29,7 +29,7 @@ export default class Speedometer extends GaugeGroup {
 	constructor(name, children) {
 		super(name, children)
 		// UI properties
-		this.__mph = 0
+		this.mph = 0
 		this.__mpg = 0
 		this.__fuel = 0.00
 		this.__power = 0.00
@@ -50,8 +50,15 @@ export default class Speedometer extends GaugeGroup {
 	
 	get_mph(){
 
-		return this.__mph
+		return this.mph
 	}
+	
+	update(update_dict){
+		Object.assign(this, update_dict)
+		// here is where we will update the necessary Gauges
+		return this
+	}
+
 	__setup(){
 		var primary_font = this.font_order[0]
 		var secondary_font = this.font_order[1]
@@ -61,7 +68,7 @@ export default class Speedometer extends GaugeGroup {
 		// MPH txt
 		let main_mph_txt_gauge = this.add_gauge("main_mph_txt", USER_SETTINGS)
 		// MPH GaugeGroup
-		this.add_gauge("main_mph", [this.main_mph_num_gauge, this.main_mph_txt_gauge])
+		this.add_gauge_group("main_mph", [main_mph_num_gauge, main_mph_txt_gauge])
 		
 		var icon = new Icon("*path/to/icon1.png*")
 
@@ -83,15 +90,5 @@ export default class Speedometer extends GaugeGroup {
 		this.add_gauge_group("resources_gauge", [power_gauge, fuel_gauge])
 	}
 
-
-	update(update_dict){
-		Object.assign(this, update_dict)
-	}
-
-
-	add_mph_indicator(threejs_font) {
-
-		this.add_mph_indicator.push(threejs_font)
-	}
 
 }

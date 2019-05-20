@@ -11,7 +11,13 @@ export default class SpeedometerUI {
 		// user settings used for scene initialization
 		this.obj_exports_path = "/assets/geo/export/"
 		this.textures_settings = {
-			"/assets/textures/azMapper.jpg": {
+			"/assets/textures/azMapper.png": {
+				name: "gradient",
+				wrapS: THREE.RepeatWrapping,
+				wrapT: THREE.RepeatWrapping
+				// anisotropy: this.renderer.capabilities.getMaxAnisotropy()
+			},
+			"/assets/textures/gradient.png": {
 				name: "gradient",
 				wrapS: THREE.RepeatWrapping,
 				wrapT: THREE.RepeatWrapping
@@ -19,29 +25,34 @@ export default class SpeedometerUI {
 			}
 		}
 		this.materials_settings = {
-			"speed_indicator_ring_mat": {}
+			"jacobs_mapper": {
+				"map_name": "/assets/textures/azMapper.png"
+			},
+			"speed_indicator_inset_mat": {
+				"map_name": "/assets/textures/gradient.png"
+			}
 		}
 		this.objs_settings = {
 			"speed_indicator_ring.obj": {
-				"texture": "/assets/textures/azMapper.jpg"
+				"material": "jacobs_mapper"
 			},
 			"speed_indicator_inset.obj": {
-				"texture": "/assets/textures/azMapper.jpg"
+				"material": "speed_indicator_inset_mat"
 			},
 			"fuel_gauge_group.obj": {
-				"texture": "/assets/textures/azMapper.jpg"
+				"material": "jacobs_mapper"
 			},
 			"power_gauge_group.obj": {
-				"texture": "/assets/textures/azMapper.jpg"
+				"material": "jacobs_mapper"
 			},
 			"fuel_gauge_group_icon.obj": {
-				"texture": "/assets/textures/azMapper.jpg"
+				"material": "jacobs_mapper"
 			},
 			"power_gauge_group_icon.obj": {
-				"texture": "/assets/textures/azMapper.jpg"
+				"material": "jacobs_mapper"
 			},
 			"drive_state_indicators.obj": {
-				"texture": "/assets/textures/azMapper.jpg"
+				"material": "jacobs_mapper"
 			},
 		}
 
@@ -81,11 +92,11 @@ export default class SpeedometerUI {
 		*/
 	}
 
-	assign_texture(object, texture) {
+	assign_material(object, material) {
 		/*
 		*/
 		object.traverse(child => {
-			if (child.isMesh) child.material.map = texture
+			if (child.isMesh) child.material = material
 		})
 		return object
 	}
@@ -146,12 +157,6 @@ export default class SpeedometerUI {
 		obj_loader.setPath(this.obj_exports_path);
 		var texture_loader = new THREE.TextureLoader()
 
-		/////////////// load materials from settings
-		for (var material_name in this.materials_settings){
-
-			let user_settings = this.materials_settings[material_name]
-			this.__materials[material_name] = new THREE.MeshStandardMaterial(user_settings)
-		}
 
 		/////////////// load textures from settings
 		for (var texture_path in this.textures_settings){
@@ -162,6 +167,17 @@ export default class SpeedometerUI {
 				Object.assign(texture, user_settings)
 				this.__textures[texture_path] = texture
 			})
+			console.log(this.__textures)
+		}
+
+		/////////////// load materials from settings
+		for (var material_name in this.materials_settings){
+
+			let user_settings = this.materials_settings[material_name]
+			user_settings.map = this.__textures[user_settings.map_name]
+			// console.log(user_settings)
+			// console.log(this.__textures)
+			// this.__materials[material_name] = new THREE.MeshStandardMaterial(user_settings)
 		}
 
 		var items_processed = 0
@@ -172,8 +188,8 @@ export default class SpeedometerUI {
 
 			let user_settings = this.objs_settings[obj_name]
 			obj_loader.load(obj_name, object => {
-				let texture = this.__textures[user_settings.texture]
-				mesh = this.assign_texture(object, texture)
+				let material = this.__materials[user_settings.material]
+				mesh = this.assign_material(object, material)
 				this.__objs[obj_name] = mesh
 				this.scene.add(mesh)
 			})
