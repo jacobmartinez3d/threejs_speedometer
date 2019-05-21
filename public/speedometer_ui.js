@@ -188,8 +188,7 @@ export default class SpeedometerUI {
 
 				var texture_path = textures_arr[texture_path_index]
 				console.log(texture_path)
-
-				// TODO: this function is totally out of sync/order...
+.
 				this.__textures[texture_path] = texture_loader.load(texture_path)
 
 				console.log(this.__textures[texture_path])
@@ -198,10 +197,6 @@ export default class SpeedometerUI {
 
 				console.log("texture loaded", texture_path)
 				items_processed ++
-				// if (items_processed >= Object.keys(this.textures_settings).length) {
-
-				// 	return resolve(this.__textures)
-				// }
 			}
 			return resolve(this.__textures)
 		})
