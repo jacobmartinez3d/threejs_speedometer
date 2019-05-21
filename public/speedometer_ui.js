@@ -18,7 +18,16 @@ export default class SpeedometerUI {
 			"/assets/textures/gradient.png": {
 				name: "gradient",
 				wrapT: THREE.RepeatWrapping
-			}
+			},
+			"/assets/textures/ring.png": {
+				name: "ring",
+				wrapT: THREE.RepeatWrapping
+			},
+			"/assets/textures/azMapper.png": {
+				name: "azMapper",
+				wrapT: THREE.RepeatWrapping
+			},
+
 		}
 		this.materials_settings = {
 			"speed_indicator_inset_mat": {
@@ -171,22 +180,23 @@ export default class SpeedometerUI {
 		let promise = new Promise((resolve) => {
 
 			let items_processed = 0
-
-			for (var texture_path in this.textures_settings){
+			var textures_arr = Object.keys(this.textures_settings)
+			for (var texture_path_index in textures_arr){
 				var texture_loader = new THREE.TextureLoader()
+				var texture_path = textures_arr[texture_path_index]
 				console.log(texture_path)
 
 				// TODO: this function is totally out of sync/order...
 				texture_loader.load(texture_path, texture => {
-					
+					console.log(texture)
 					let user_settings = this.textures_settings[texture_path]
 					Object.assign(texture, user_settings)
 					this.__textures[texture_path] = texture
 
 					items_processed ++
-					
 					if (items_processed >= Object.keys(this.textures_settings).length) {
-						resolve(this.__textures)
+
+						return resolve(this.__textures)
 					}
 				})
 			}
