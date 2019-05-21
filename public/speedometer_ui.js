@@ -27,6 +27,26 @@ export default class SpeedometerUI {
 				name: "azMapper",
 				wrapT: THREE.RepeatWrapping
 			},
+			"/assets/textures/power_icon.png": {
+				name: "power_icon",
+				wrapT: THREE.RepeatWrapping
+			},
+			"/assets/textures/resources_icon.png": {
+				name: "resources_icon",
+				wrapT: THREE.RepeatWrapping
+			},
+			"/assets/textures/resources_gauge_color.png": {
+				name: "resources_gauge_color",
+				wrapT: THREE.RepeatWrapping
+			},
+			"/assets/textures/power_gauge_color.png": {
+				name: "power_gauge_color",
+				wrapT: THREE.RepeatWrapping
+			},
+			"/assets/textures/drive_state_indicators.png": {
+				name: "drive_state_indicators",
+				wrapT: THREE.RepeatWrapping
+			},
 
 		}
 		this.materials_settings = {
@@ -38,6 +58,21 @@ export default class SpeedometerUI {
 			},
 			"azMapper": {
 				"map": "/assets/textures/azMapper.png"
+			},
+			"power_icon": {
+				"map": "/assets/textures/power_icon.png"
+			},
+			"resources_icon": {
+				"map": "/assets/textures/resources_icon.png"
+			},
+			"resources_gauge_color": {
+				"map": "/assets/textures/resources_gauge_color.png"
+			},
+			"power_gauge_color": {
+				"map": "/assets/textures/power_gauge_color.png"
+			},
+			"drive_state_indicators": {
+				"map": "/assets/textures/drive_state_indicators.png"
 			}
 		}
 		this.objs_settings = {
@@ -48,19 +83,19 @@ export default class SpeedometerUI {
 				"material": "speed_indicator_inset_mat"
 			},
 			"fuel_gauge_group.obj": {
-				"material": "azMapper"
+				"material": "resources_gauge_color"
 			},
 			"power_gauge_group.obj": {
-				"material": "azMapper"
+				"material": "power_gauge_color"
 			},
 			"fuel_gauge_group_icon.obj": {
-				"material": "azMapper"
+				"material": "resources_icon"
 			},
 			"power_gauge_group_icon.obj": {
-				"material": "azMapper"
+				"material": "power_icon"
 			},
 			"drive_state_indicators.obj": {
-				"material": "azMapper"
+				"material": "drive_state_indicators"
 			},
 		}
 		this.text_geos_settings = {
@@ -213,7 +248,6 @@ export default class SpeedometerUI {
 		/*
 		Instantiate a THREE.Material instance for each scene-settings entry
 		*/
-		console.log("textures currently:", this.__textures)
 		console.log("loading materials...")
 
 		let promise = new Promise((resolve) => {
@@ -231,6 +265,7 @@ export default class SpeedometerUI {
 				}
 				this.materials_settings[material_name].map = this.__textures[this.materials_settings[material_name].map]
 				this.__materials[material_name] = new THREE.MeshBasicMaterial(this.materials_settings[material_name])
+				this.__materials[material_name].transparent = true
 				
 				items_processed ++
 				if (items_processed >= Object.keys(this.materials_settings).length) {
@@ -279,24 +314,6 @@ export default class SpeedometerUI {
 		/*
 		Update the MPH text by removing the old one and re-insantiating a new one.
 		*/
-		// let promise = new Promise((resolve) => {
-		// 	let items_processed = 0
-		// 	for(var text_geo_name in this.__text_geos_settings){
-		// 		var font_loader = new THREE.FontLoader();
-		// 		// TODO pull this from settings dont hard-code
-		// 		font_loader.load('assets/fonts/helvetiker_regular.typeface.json', ( font ) => {
-		// 			let text_geo = new THREE.TextGeometry( ), {
-		// 				font: font,
-		// 				size: 1,
-		// 				height: .1,
-		// 				curveSegments: 2,
-		// 				bevelEnabled: false
-
-		// 			} );
-		// 		})
-		// 	}
-		// })
-
 		var loader = new THREE.FontLoader();
 		let promise = new Promise((resolve) => {
 
