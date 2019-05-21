@@ -179,27 +179,31 @@ export default class SpeedometerUI {
 		console.log("loading textures...")
 		let promise = new Promise((resolve) => {
 
+			var texture_loader = new THREE.TextureLoader()
 			let items_processed = 0
 			var textures_arr = Object.keys(this.textures_settings)
 			for (var texture_path_index in textures_arr){
-				var texture_loader = new THREE.TextureLoader()
+
+				console.log("texture_path_index", texture_path_index)
+
 				var texture_path = textures_arr[texture_path_index]
 				console.log(texture_path)
 
 				// TODO: this function is totally out of sync/order...
-				texture_loader.load(texture_path, texture => {
-					console.log(texture)
-					let user_settings = this.textures_settings[texture_path]
-					Object.assign(texture, user_settings)
-					this.__textures[texture_path] = texture
+				this.__textures[texture_path] = texture_loader.load(texture_path)
 
-					items_processed ++
-					if (items_processed >= Object.keys(this.textures_settings).length) {
+				console.log(this.__textures[texture_path])
+				let user_settings = this.textures_settings[texture_path]
+				Object.assign(this.__textures[texture_path], user_settings)
 
-						return resolve(this.__textures)
-					}
-				})
+				console.log("texture loaded", texture_path)
+				items_processed ++
+				// if (items_processed >= Object.keys(this.textures_settings).length) {
+
+				// 	return resolve(this.__textures)
+				// }
 			}
+			return resolve(this.__textures)
 		})
 
 		return promise
@@ -209,15 +213,21 @@ export default class SpeedometerUI {
 		/*
 		Instantiate a THREE.Material instance for each scene-settings entry
 		*/
+		console.log("textures currently:", this.__textures)
 		console.log("loading materials...")
+
 		let promise = new Promise((resolve) => {
-
+			var materials_arr = Object.keys(this.materials_settings)
 			let items_processed = 0
-			for (var material_name in this.materials_settings){
+			for (var material_name_index in materials_arr){
 
+				var material_name = materials_arr[material_name_index]
+
+				// this ultimately needs to be a texture instance, so strings get converted here...
 				if (typeof this.materials_settings[material_name].map === String) {
 					let mat_texture_path = this.materials_settings[material_name].map
 					this.materials_settings[material_name].map = this.__textures[mat_texture_path]
+
 				}
 				this.materials_settings[material_name].map = this.__textures[this.materials_settings[material_name].map]
 				this.__materials[material_name] = new THREE.MeshBasicMaterial(this.materials_settings[material_name])
@@ -230,7 +240,6 @@ export default class SpeedometerUI {
 
 			resolve(this.__materials)
 		})
-
 		return promise
 	}
 
