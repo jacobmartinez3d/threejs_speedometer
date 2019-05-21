@@ -154,6 +154,9 @@ export default class SpeedometerUI {
 		
 		// replace text geo
 		this.scene.remove(this.__text_geos.mph_num)
+
+		var loader = new THREE.FontLoader();
+
 		this.__update_mph_text().then(() => {
 			this.scene.add(this.__text_geos.mph_num)
 			this.render()
@@ -315,48 +318,43 @@ export default class SpeedometerUI {
 		Update the MPH text by removing the old one and re-insantiating a new one.
 		*/
 		var loader = new THREE.FontLoader();
-		let promise = new Promise((resolve) => {
 
-			loader.load( 'assets/fonts/helvetiker_regular.typeface.json', ( font ) => {
-				let text_geo = new THREE.TextGeometry( parseInt(this.mph.toString()), {
-					font: font,
-					size: 1.8,
-					height: .1,
-					curveSegments: 5,
-					bevelEnabled: false
 
-				} );
-				let name = "mph_num"
-				this.__text_geos[name] = new THREE.Mesh(text_geo, this.__materials["speed_indicator_ring_mat"])
-				
-				this.translate(this.__text_geos[name], this.text_geos_settings[name].translate)
-				
-				this.scene.add(this.__text_geos[name])
+		loader.load( 'assets/fonts/helvetiker_regular.typeface.json', ( font ) => {
+			let text_geo = new THREE.TextGeometry( parseInt(this.mph.toString()), {
+				font: font,
+				size: 1.8,
+				height: .1,
+				curveSegments: 5,
+				bevelEnabled: false
 
-				resolve(this.__text_geos[name])
 			} );
+			let name = "mph_num"
+			this.__text_geos[name] = new THREE.Mesh(text_geo, this.__materials["speed_indicator_ring_mat"])
+			
+			this.translate(this.__text_geos[name], this.text_geos_settings[name].translate)
+			
+			this.scene.add(this.__text_geos[name])
+		} );
 
-			name = "mph_text"
+		name = "mph_text"
 
-			loader.load( 'assets/fonts/helvetiker_regular.typeface.json', ( font ) => {
-				let text_geo = new THREE.TextGeometry( "MPH", {
-					font: font,
-					size: .5,
-					height: .08,
-					curveSegments: 2,
-					bevelEnabled: false
-				} );
-				this.__text_geos[name] = new THREE.Mesh(text_geo, this.__materials["speed_indicator_ring_mat"])
-				
-				this.translate(this.__text_geos[name], this.text_geos_settings[name].translate)
-
-				this.scene.add(this.__text_geos[name])
-
-				resolve(this.__text_geos[name])
+		loader.load( 'assets/fonts/helvetiker_regular.typeface.json', ( font ) => {
+			let text_geo = new THREE.TextGeometry( "MPH", {
+				font: font,
+				size: .5,
+				height: .08,
+				curveSegments: 2,
+				bevelEnabled: false
 			} );
-		})
+			this.__text_geos[name] = new THREE.Mesh(text_geo, this.__materials["speed_indicator_ring_mat"])
+			
+			this.translate(this.__text_geos[name], this.text_geos_settings[name].translate)
 
-		return promise
+			this.scene.add(this.__text_geos[name])
+		} );
+
+
 	}
 	
 	__setup_scene() {
